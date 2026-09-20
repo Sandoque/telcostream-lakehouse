@@ -126,3 +126,39 @@ CREATE TABLE IF NOT EXISTS dbw_telcostream_dev.bronze.kpi_external_real
 SELECT count(*) FROM dbw_telcostream_dev.bronze.kpi_external_real;
 DESCRIBE EXTENDED dbw_telcostream_dev.bronze.kpi_external_real;
 ```
+
+### Passo a passo no Azure Portal (antes de executar o SQL acima)
+
+**Passo 1 — Criar o Storage Account externo**
+1. Azure Portal → Create a resource → Storage account
+2. Resource group: `rg-telcostream-lab` (NÃO o managed RG `rg-telcostream-databricks-managed`)
+3. Storage account name: `sttelcoextdev` (único globalmente, letras+números, máx 24 chars)
+4. Region: mesma do workspace | Performance: Standard | Redundancy: LRS
+5. Networking → Public endpoint (all networks)
+6. Review + create
+
+**Passo 2 — Criar container `telcostream-external`**
+1. Dentro do storage account → Data storage → Containers → + Container
+2. Name: `telcostream-external` | Public access level: Private
+
+**Passo 3 — Criar Access Connector for Azure Databricks**
+1. Create a resource → Access Connector for Azure Databricks
+2. Resource group: `rg-telcostream-lab` | Name: `ac-telcostream-lab` | mesma região
+3. Após criar: Settings → Properties → copiar o **Resource ID** completo
+   Formato: `/subscriptions/<SUB_ID>/resourceGroups/rg-telcostream-lab/providers/Microsoft.Databricks/accessConnectors/ac-telcostream-lab`
+
+**Passo 4 — Atribuir role ao Access Connector**
+1. No storage account `sttelcoextdev` → Access control (IAM) → + Add → Add role assignment
+2. Role: `Storage Blob Data Contributor` → Next
+3. Members → Assign access to: Managed identity → + Select members
+4. Filtrar por Access Connector for Azure Databricks → selecionar `ac-telcostream-lab`
+5. Review + assign (confirmar duas vezes)
+
+**Placeholders para substituir no SQL:**
+
+| Placeholder | Onde obter |
+|---|---|
+| `<SUB_ID>` | Azure Portal → Subscriptions → Subscription ID |
+| `<STORAGE_ACCOUNT>` | Nome criado no Passo 1 (ex: `sttelcoextdev`) |
+
+**Custo estimado:** Storage LRS < 1 GB ≈ \$0,02/mês. Apagar o storage após a demo.
