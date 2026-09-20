@@ -1,7 +1,6 @@
 # TelcoStream Lakehouse
 
-Projeto de referência para o exame **DP-750 (Databricks Certified Data Engineer Professional)**  
-e preparação para entrevista Capgemini/Vivo.  
+Projeto de referência para o exame **DP-750 (Databricks Certified Data Engineer Professional)**.  
 Implementa um pipeline Medallião completo (Bronze → Silver → Gold) com Unity Catalog no Azure Databricks.
 
 ## Arquitetura
