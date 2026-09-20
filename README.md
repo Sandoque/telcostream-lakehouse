@@ -1,7 +1,7 @@
 # TelcoStream Lakehouse
 
 Projeto de referência para o exame **DP-750 (Microsoft Certified: Azure Databricks Data Engineer Associate)**.  
-Implementa um pipeline Medalhão completo (Bronze → Silver → Gold) com Unity Catalog no Azure Databricks.
+Implementa um pipeline Medalhão completo (Bronze → Silver → Gold) com Unity Catalog no Azure Databricks, orientado à ingestão de **Call Detail Records (CDR)** e dados de consumo móvel para **monitorização operacional da rede**, **deteção de anomalias**, e **suporte a análises de retenção/churn**, com governança rigorosa de PII.
 
 ## Arquitetura
 
@@ -21,6 +21,12 @@ ADLS Gen2 (Volumes UC)
                                           │
                          ► gold.kpi_tower_hourly      (72 grupos hora/antena)
 ```
+
+## Cenário de Mercado
+
+Uma operadora de telecomunicações necessita de ingerir registos de chamadas (**Call Detail Records - CDR**) e dados de consumo de dados móveis para monitorizar anomalias de rede, mitigar o abandono de clientes (**churn**) e expor métricas operacionais para as equipas de analítica, garantindo conformidade rigorosa com a privacidade de dados (**PII**).
+
+Neste projeto, a camada Gold implementada está focada em **KPIs operacionais por antena/hora**, permitindo observabilidade da rede e identificação de degradação de serviço. O caso de uso de churn fica **habilitado pela Silver e pela dimensão histórica SCD2**, mas não é ainda materializado numa Gold específica de risco de churn.
 
 ### 📸 Evidência no Azure Databricks (Unity Catalog)
 

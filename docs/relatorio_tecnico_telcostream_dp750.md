@@ -22,26 +22,17 @@ Ao final do lab, o ambiente ficou com:
 
 ## 2. Objetivo do projeto
 
-O caso TelcoStream simula um cenário de engenharia de dados para telecom, em que eventos de chamadas e eventos de clientes precisam ser tratados com requisitos típicos de produção:
+O caso TelcoStream simula um cenário de engenharia de dados para telecom, em que eventos de chamadas e consumo de dados móveis precisam ser tratados com requisitos típicos de produção:
 
 * ingestão incremental e idempotente
 * deduplicação por versão de evento
 * separação entre registros válidos e inválidos
 * manutenção de histórico de atributos de cliente
-* geração de KPIs de negócio
+* geração de KPIs operacionais para monitorização da rede
+* suporte a deteção de anomalias e análises de retenção/churn
 * governança de acesso com Unity Catalog
 * automação por pipeline declarativo, job e bundle
 * integração com Azure Data Lake Storage Gen2
-
-Do ponto de vista de certificação e avaliação técnica, o projeto demonstra domínio prático de:
-
-* modelagem lakehouse
-* SQL e PySpark aplicados a Databricks
-* Unity Catalog
-* Lakeflow Jobs
-* Lakeflow Spark Declarative Pipelines
-* external locations e storage credentials
-* boas práticas de validação e evidência técnica
 
 ---
 
@@ -204,6 +195,10 @@ External Location Azure (storage externo real)
 ---
 
 ### 4.5 Fase 4 — Gold
+
+#### Observação de escopo
+
+A Gold implementada neste projeto é orientada a **operações de rede** (`kpi_tower_hourly`), com granularidade por antena e hora. Ela atende diretamente o caso de uso de monitorização operacional e deteção de anomalias. O caso de uso de churn está **habilitado**, mas dependeria de uma camada analítica adicional, por exemplo `gold.kpi_customer_daily` ou `gold.churn_risk_features`.
 
 #### Implementado
 

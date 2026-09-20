@@ -5,6 +5,12 @@ Finalidade: evidência técnica para Certificação DP-750.
 
 ---
 
+## Nota de escopo analítico
+
+**Decisão:** priorizar, na Gold, indicadores operacionais por antena/hora em vez de uma Gold orientada a churn.
+
+**Por quê:** O problema mais diretamente resolvido pelo pipeline atual é a observabilidade da rede e a deteção de degradação operacional. A base para churn foi preparada na Silver e na dimensão SCD2, mas a materialização de features ou scores de churn foi deixada como evolução futura.
+
 ## 1. CTE inline no MERGE (Fase 1)
 
 **Decisão:** usar `WITH cte AS (…) MERGE INTO target USING cte …` em vez de `CREATE TEMP VIEW + MERGE`.
