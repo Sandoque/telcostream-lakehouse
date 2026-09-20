@@ -1,6 +1,6 @@
 # TelcoStream Lakehouse
 
-Projeto de referência para o exame **DP-750 (Databricks Certified Data Engineer Professional)**.  
+Projeto de referência para o exame **DP-750 (Microsoft Certified: Azure Databricks Data Engineer Associate)**.  
 Implementa um pipeline Medallião completo (Bronze → Silver → Gold) com Unity Catalog no Azure Databricks.
 
 ## Arquitetura
@@ -50,7 +50,7 @@ telcostream-lakehouse/
 | 6 | Lakeflow Job: 3 tarefas, run 695010521785213 SUCCESS | ✅ |
 | 7 | Git folder + Declarative Automation Bundle | ✅ |
 | 8 | Governança: column mask, row filter, GRANTs | ✅ |
-| 9 | Azure Extensions: external table, secret scope | ✅ (parcial) |
+| 9 | Azure Extensions: external table, secret scope, external storage real | ✅ |
 
 ## Recursos no Workspace
 
@@ -60,7 +60,7 @@ telcostream-lakehouse/
 | Pipeline SDP | `d9fc5ce0-205f-4ba6-b008-23402cca1568` |
 | Job (manual) | `699226207030057` |
 | Job (bundle) | `742363202625953` |
-| Workspace | `https://adb-7405611591723186.6.azuredatabricks.net` |
+| Workspace | `<WORKSPACE_HOST>` |
 
 ## Como Reproduzir
 
@@ -73,4 +73,5 @@ databricks bundle deploy   --target dev
 ```
 
 Ver `evidencias/00_ambiente.md` para detalhes do ambiente e contagens.  
-Ver `docs/decisoes.md` para decisões técnicas justificadas.
+Ver `docs/decisoes.md` para decisões técnicas justificadas.  
+Ver `docs/relatorio_tecnico_telcostream_dp750.md` para o relatório técnico consolidado.

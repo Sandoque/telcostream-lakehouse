@@ -4,7 +4,7 @@
 
 Este documento consolida a implementação do projeto **TelcoStream Lakehouse** no Azure Databricks com **Unity Catalog**, com foco em dois objetivos:
 
-* preparação para a certificação **DP-750 / Databricks Certified Data Engineer Professional**
+* preparação para a certificação **DP-750 / Microsoft Certified: Azure Databricks Data Engineer Associate**
 * suporte a uma **demonstração técnica profissional**, com evidências funcionais, arquiteturais e operacionais
 
 O projeto implementa um fluxo **Medallion Architecture** completo, cobrindo ingestão de dados, transformação, qualidade, deduplicação, modelagem histórica, agregação analítica, orquestração, governança e integração com recursos Azure externos.
@@ -51,9 +51,9 @@ Do ponto de vista de certificação e avaliação técnica, o projeto demonstra 
 
 | Item | Valor |
 | --- | --- |
-| Workspace | `https://adb-7405611591723186.6.azuredatabricks.net` |
-| Workspace ID | `7405611591723186` |
-| Usuário | `acshinobi@outlook.com` |
+| Workspace | `<WORKSPACE_HOST>` |
+| Workspace ID | `<WORKSPACE_ID>` |
+| Usuário | `<USER_EMAIL>` |
 | Catálogo | `dbw_telcostream_dev` |
 | Compute principal | Serverless Interactive |
 | Região Azure | East US |
@@ -320,7 +320,7 @@ External Location Azure (storage externo real)
 
 #### Limitação conhecida
 
-O item de grupos UC ficou parcialmente adaptado porque a conta do lab é pessoal (`outlook.com`) e não está provisionada no tenant corporativo do Account Console. Por isso, o fallback foi aplicar GRANTs ao usuário atual para demonstrar o padrão técnico.
+O item de grupos UC ficou parcialmente adaptado porque a conta usada no lab não está provisionada no tenant corporativo do Account Console. Por isso, o fallback foi aplicar GRANTs ao usuário atual para demonstrar o padrão técnico.
 
 #### Como verificar
 
@@ -343,8 +343,8 @@ O item de grupos UC ficou parcialmente adaptado porque a conta do lab é pessoal
 * external table de laboratório em path externo ao `__unitystorage`
 * secret scope Databricks-backed `telcostream-scope`
 * mini lab real com storage externo:
-  * storage account `sttelcoextdev`
-  * Access Connector `ac-telcostream-lab`
+  * storage account `<EXTERNAL_STORAGE_ACCOUNT>`
+  * Access Connector `<ACCESS_CONNECTOR_NAME>`
   * storage credential `telco_external_cred`
   * external location `telco_external_raw`
   * external table `bronze.kpi_external_real`
@@ -354,7 +354,7 @@ O item de grupos UC ficou parcialmente adaptado porque a conta do lab é pessoal
 * `SHOW STORAGE CREDENTIALS`
 * `SHOW EXTERNAL LOCATIONS`
 * `SELECT count(*) FROM dbw_telcostream_dev.bronze.kpi_external_real`
-* Azure Portal no storage `sttelcoextdev`
+* Azure Portal no storage `<EXTERNAL_STORAGE_ACCOUNT>`
 
 #### Validação esperada
 
@@ -546,7 +546,7 @@ Para uma revisão técnica rápida, a sequência recomendada é:
 5. rodar `SHOW EXTERNAL LOCATIONS`
 6. rodar `SHOW STORAGE CREDENTIALS`
 7. abrir o Azure Portal e mostrar:
-   * `sttelcoextdev` acessível
+   * `<EXTERNAL_STORAGE_ACCOUNT>` acessível
    * storage gerenciado do Databricks com erro 403
 
 ---

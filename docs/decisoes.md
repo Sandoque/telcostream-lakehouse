@@ -63,9 +63,9 @@ Finalidade: evidência técnica para Certificação DP-750.
 
 ## 8. GRANTs ao usuário atual (fallback) em vez de grupo (Fase 8)
 
-**Decisão:** aplicar GRANTs a `acshinobi@outlook.com` diretamente, em vez de ao grupo `telco_analysts`.
+**Decisão:** aplicar GRANTs ao usuário atual do workspace, em vez de ao grupo `telco_analysts`.
 
-**Por quê:** `acshinobi@outlook.com` é conta pessoal Microsoft (outlook.com), não provisionada no tenant Azure do Account Console (`accounts.azuredatabricks.net`). UC exige grupos de nível de conta; grupos workspace-local criados via `WorkspaceClient` não são reconhecidos pelo UC. `AccountClient()` retornou `NotFound`. O fallback garante que o padrão de GRANT funciona para demonstração; em produção, criar o grupo no Account Console antes de executar.
+**Por quê:** A conta usada no lab não estava provisionada no tenant corporativo do Account Console. UC exige grupos de nível de conta; grupos workspace-local criados via `WorkspaceClient` não são reconhecidos pelo UC. `AccountClient()` retornou `NotFound`. O fallback garante que o padrão de GRANT funciona para demonstração; em produção, criar o grupo no Account Console antes de executar.
 
 ---
 
@@ -81,7 +81,7 @@ Finalidade: evidência técnica para Certificação DP-750.
 
 **Decisão:** criar `bronze.kpi_external_snapshot` em `external_lab/kpi_snapshot` dentro do mesmo storage account UC, usando a storage credential existente.
 
-**Por quê:** O workspace tem apenas uma storage account (`dbstorageendatmjb73tym`). Uma external location apontando para um container separado exigiria um segundo storage account com Service Principal dedicado. Usar um sub-path fora de `__unitystorage/` dentro da mesma conta demonstra o padrão de external table (arquivo Delta gerenciado pelo usuário, não pelo UC) sem precisar de infraestrutura adicional.
+**Por quê:** O workspace tem apenas uma storage account gerenciada (`<UC_STORAGE_ACCOUNT>`). Uma external location apontando para um container separado exigiria um segundo storage account com Service Principal dedicado. Usar um sub-path fora de `__unitystorage/` dentro da mesma conta demonstra o padrão de external table (arquivo Delta gerenciado pelo usuário, não pelo UC) sem precisar de infraestrutura adicional.
 
 ---
 
@@ -89,7 +89,7 @@ Finalidade: evidência técnica para Certificação DP-750.
 
 **Decisão:** planejar o mini lab de external location usando um storage account criado fora do resource group gerenciado do Azure Databricks.
 
-**Por quê:** O storage account `dbstorageendatmjb73tym` está no managed resource group do workspace e possui um **deny assignment** criado automaticamente pelo Azure Databricks. Isso impede navegação e operações administrativas diretas pelo Azure Portal, mesmo quando a conta possui permissões amplas na subscription. Para demonstrar corretamente external location em entrevista e seguir o padrão de produção, o ideal é usar um storage account controlado pela empresa, com Access Connector / Managed Identity e RBAC explícito (`Storage Blob Data Contributor`). Assim fica clara a separação entre:
+**Por quê:** O storage account gerenciado `<UC_STORAGE_ACCOUNT>` está no managed resource group do workspace e possui um **deny assignment** criado automaticamente pelo Azure Databricks. Isso impede navegação e operações administrativas diretas pelo Azure Portal, mesmo quando a conta possui permissões amplas na subscription. Para demonstrar corretamente external location em entrevista e seguir o padrão de produção, o ideal é usar um storage account controlado pela empresa, com Access Connector / Managed Identity e RBAC explícito (`Storage Blob Data Contributor`). Assim fica clara a separação entre:
 * **managed storage**: controlado pelo Databricks
 * **external storage**: controlado pela empresa e governado pelo Unity Catalog
 
@@ -98,8 +98,8 @@ Finalidade: evidência técnica para Certificação DP-750.
 ### Passos do mini lab (executar no checklist notebook após provisionar a infra)
 
 Pré-requisitos no Azure Portal:
-1. Storage Account fora do managed RG (ex: `sttelcoextdev`, container `telcostream-external`)
-2. Access Connector for Azure Databricks no mesmo RG (ex: `ac-telcostream-lab`)
+1. Storage Account fora do managed RG (ex: `<EXTERNAL_STORAGE_ACCOUNT>`, container `<EXTERNAL_CONTAINER>`)
+2. Access Connector for Azure Databricks no mesmo RG (ex: `<ACCESS_CONNECTOR_NAME>`)
 3. Role `Storage Blob Data Contributor` atribuído ao Access Connector no storage account
 
 Sequência no Databricks (substituir placeholders antes de executar):
@@ -108,7 +108,7 @@ Sequência no Databricks (substituir placeholders antes de executar):
 -- Passo 1: Storage Credential via Managed Identity
 CREATE STORAGE CREDENTIAL IF NOT EXISTS telco_external_cred
   WITH AZURE_MANAGED_IDENTITY (
-    CREDENTIAL_NAME = '/subscriptions/<SUB_ID>/resourceGroups/rg-telcostream-lab/providers/Microsoft.Databricks/accessConnectors/ac-telcostream-lab'
+    CREDENTIAL_NAME = '/subscriptions/<AZURE_SUBSCRIPTION_ID>/resourceGroups/<AZURE_RESOURCE_GROUP>/providers/Microsoft.Databricks/accessConnectors/<ACCESS_CONNECTOR_NAME>'
   );
 VALIDATE STORAGE CREDENTIAL telco_external_cred
   ON LOCATION 'abfss://telcostream-external@<STORAGE_ACCOUNT>.dfs.core.windows.net/';
@@ -131,35 +131,35 @@ DESCRIBE EXTENDED dbw_telcostream_dev.bronze.kpi_external_real;
 
 **Passo 1 — Criar o Storage Account externo**
 1. Azure Portal → Create a resource → Storage account
-2. Resource group: `rg-telcostream-lab` (NÃO o managed RG `rg-telcostream-databricks-managed`)
-3. Storage account name: `sttelcoextdev` (único globalmente, letras+números, máx 24 chars)
+2. Resource group: `<AZURE_RESOURCE_GROUP>` (NÃO o managed RG do workspace)
+3. Storage account name: `<EXTERNAL_STORAGE_ACCOUNT>` (único globalmente, letras+números, máx 24 chars)
 4. Region: mesma do workspace | Performance: Standard | Redundancy: LRS
 5. Networking → Public endpoint (all networks)
 6. Review + create
 
-**Passo 2 — Criar container `telcostream-external`**
+**Passo 2 — Criar container `<EXTERNAL_CONTAINER>`**
 1. Dentro do storage account → Data storage → Containers → + Container
-2. Name: `telcostream-external` | Public access level: Private
+2. Name: `<EXTERNAL_CONTAINER>` | Public access level: Private
 
 **Passo 3 — Criar Access Connector for Azure Databricks**
 1. Create a resource → Access Connector for Azure Databricks
-2. Resource group: `rg-telcostream-lab` | Name: `ac-telcostream-lab` | mesma região
+2. Resource group: `<AZURE_RESOURCE_GROUP>` | Name: `<ACCESS_CONNECTOR_NAME>` | mesma região
 3. Após criar: Settings → Properties → copiar o **Resource ID** completo
-   Formato: `/subscriptions/<SUB_ID>/resourceGroups/rg-telcostream-lab/providers/Microsoft.Databricks/accessConnectors/ac-telcostream-lab`
+   Formato: `/subscriptions/<AZURE_SUBSCRIPTION_ID>/resourceGroups/<AZURE_RESOURCE_GROUP>/providers/Microsoft.Databricks/accessConnectors/<ACCESS_CONNECTOR_NAME>`
 
 **Passo 4 — Atribuir role ao Access Connector**
-1. No storage account `sttelcoextdev` → Access control (IAM) → + Add → Add role assignment
+1. No storage account `<EXTERNAL_STORAGE_ACCOUNT>` → Access control (IAM) → + Add → Add role assignment
 2. Role: `Storage Blob Data Contributor` → Next
 3. Members → Assign access to: Managed identity → + Select members
-4. Filtrar por Access Connector for Azure Databricks → selecionar `ac-telcostream-lab`
+4. Filtrar por Access Connector for Azure Databricks → selecionar `<ACCESS_CONNECTOR_NAME>`
 5. Review + assign (confirmar duas vezes)
 
 **Placeholders para substituir no SQL:**
 
 | Placeholder | Onde obter |
 |---|---|
-| `<SUB_ID>` | Azure Portal → Subscriptions → Subscription ID |
-| `<STORAGE_ACCOUNT>` | Nome criado no Passo 1 (ex: `sttelcoextdev`) |
+| `<AZURE_SUBSCRIPTION_ID>` | Azure Portal → Subscriptions → Subscription ID |
+| `<STORAGE_ACCOUNT>` | Nome criado no Passo 1 (ex: `<EXTERNAL_STORAGE_ACCOUNT>`) |
 
 **Custo estimado:** Storage LRS < 1 GB ≈ \$0,02/mês. Apagar o storage após a demo.
 
@@ -223,19 +223,19 @@ Mostre: cell 10.2 (is_member=false → valores reais) + DESCRIBE EXTENDED cdr_si
 ## Minuto 7–8 — Azure Extensions
 
 **External storage (managed vs externo):**
-* `dbstorageendatmjb73tym` — storage gerenciado, deny assignment bloqueia acesso no Portal
-* `sttelcoextdev` — storage externo controlado pela empresa, acessível no portal
+* `<UC_STORAGE_ACCOUNT>` — storage gerenciado, deny assignment bloqueia acesso no Portal
+* `<EXTERNAL_STORAGE_ACCOUNT>` — storage externo controlado pela empresa, acessível no portal
 
 **Unity Catalog governance sobre storage externo:**
-* `telco_external_cred` — credential via Access Connector `ac-telcostream-lab` (Managed Identity)
-* `telco_external_raw` — external location `abfss://telcostream-external@sttelcoextdev.dfs.core.windows.net/raw`
+* `telco_external_cred` — credential via Access Connector `<ACCESS_CONNECTOR_NAME>` (Managed Identity)
+* `telco_external_raw` — external location `abfss://<EXTERNAL_CONTAINER>@<EXTERNAL_STORAGE_ACCOUNT>.dfs.core.windows.net/raw`
 * `kpi_external_real` — external table Delta (72 linhas)
 
 **Secret scope:** `telcostream-scope` — 3 chaves; `dbutils.secrets.get` oculta valores em logs
 
 Mostre:
-1. Azure Portal → `sttelcoextdev` → Containers → acessível ✅
-2. Azure Portal → `dbstorageendatmjb73tym` → Containers → erro 403 ✅
+1. Azure Portal → `<EXTERNAL_STORAGE_ACCOUNT>` → Containers → acessível ✅
+2. Azure Portal → `<UC_STORAGE_ACCOUNT>` → Containers → erro 403 ✅
 3. cell 10.1 → `kpi_external_real = 72`
 4. cell 9.3b → lista de secrets
 

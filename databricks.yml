@@ -8,12 +8,18 @@ variables:
   pipeline_schema:
     description: Pipeline output schema
     default: pipeline_lab
+  workspace_host:
+    description: Databricks workspace host for deployment
+    default: <WORKSPACE_HOST>
+  workspace_user_email:
+    description: Workspace home path owner for notebook and pipeline library references
+    default: <USER_EMAIL>
 
 targets:
   dev:
     default: true
     workspace:
-      host: https://adb-7405611591723186.6.azuredatabricks.net
+      host: ${var.workspace_host}
 
 resources:
   jobs:
@@ -23,21 +29,21 @@ resources:
       tasks:
         - task_key: ingest_bronze
           notebook_task:
-            notebook_path: /Users/acshinobi@outlook.com/02_ingest_bronze_cdr
+            notebook_path: /Users/${var.workspace_user_email}/02_ingest_bronze_cdr
             source: WORKSPACE
           timeout_seconds: 1800
         - task_key: process_silver
           depends_on:
             - task_key: ingest_bronze
           notebook_task:
-            notebook_path: /Users/acshinobi@outlook.com/04_silver_telcostream
+            notebook_path: /Users/${var.workspace_user_email}/04_silver_telcostream
             source: WORKSPACE
           timeout_seconds: 1800
         - task_key: build_gold
           depends_on:
             - task_key: process_silver
           notebook_task:
-            notebook_path: /Users/acshinobi@outlook.com/06_gold_telcostream
+            notebook_path: /Users/${var.workspace_user_email}/06_gold_telcostream
             source: WORKSPACE
           timeout_seconds: 1800
 
@@ -52,4 +58,4 @@ resources:
       channel: CURRENT
       libraries:
         - glob:
-            include: /Users/acshinobi@outlook.com/telcostream_sdp_00629e5f/transformations/**
+            include: /Users/${var.workspace_user_email}/<PIPELINE_PROJECT_PATH>/transformations/**
