@@ -82,3 +82,15 @@ Finalidade: evidência técnica para Certificação DP-750.
 **Decisão:** criar `bronze.kpi_external_snapshot` em `external_lab/kpi_snapshot` dentro do mesmo storage account UC, usando a storage credential existente.
 
 **Por quê:** O workspace tem apenas uma storage account (`dbstorageendatmjb73tym`). Uma external location apontando para um container separado exigiria um segundo storage account com Service Principal dedicado. Usar um sub-path fora de `__unitystorage/` dentro da mesma conta demonstra o padrão de external table (arquivo Delta gerenciado pelo usuário, não pelo UC) sem precisar de infraestrutura adicional.
+
+---
+
+## 11. External location real deve ficar fora do managed resource group (Fase 9)
+
+**Decisão:** planejar o mini lab de external location usando um storage account criado fora do resource group gerenciado do Azure Databricks.
+
+**Por quê:** O storage account `dbstorageendatmjb73tym` está no managed resource group do workspace e possui um **deny assignment** criado automaticamente pelo Azure Databricks. Isso impede navegação e operações administrativas diretas pelo Azure Portal, mesmo quando a conta possui permissões amplas na subscription. Para demonstrar corretamente external location em entrevista e seguir o padrão de produção, o ideal é usar um storage account controlado pela empresa, com Access Connector / Managed Identity e RBAC explícito (`Storage Blob Data Contributor`). Assim fica clara a separação entre:
+* **managed storage**: controlado pelo Databricks
+* **external storage**: controlado pela empresa e governado pelo Unity Catalog
+
+**Implicação prática:** o bundle atual permanece sem recursos de external location até a infraestrutura Azure externa existir e ser validada manualmente.
