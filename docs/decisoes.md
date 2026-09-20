@@ -1,7 +1,7 @@
 # TelcoStream Lakehouse — Decisões Técnicas
 
 Documento de decisões de design tomadas durante o projeto TelcoStream.
-Finalidade: evidência técnica para entrevista Capgemini/Vivo (DP-750).
+Finalidade: evidência técnica para Certificação DP-750.
 
 ---
 
