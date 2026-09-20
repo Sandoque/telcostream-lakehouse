@@ -1,7 +1,7 @@
 # TelcoStream Lakehouse
 
 Projeto de referência para o exame **DP-750 (Microsoft Certified: Azure Databricks Data Engineer Associate)**.  
-Implementa um pipeline Medallião completo (Bronze → Silver → Gold) com Unity Catalog no Azure Databricks.
+Implementa um pipeline Medalhão completo (Bronze → Silver → Gold) com Unity Catalog no Azure Databricks.
 
 ## Arquitetura
 
@@ -26,7 +26,33 @@ ADLS Gen2 (Volumes UC)
 
 ![Catalog Explorer do Azure Databricks mostrando o catálogo dbw_telcostream_dev e os schemas bronze, silver, gold, ops, pipeline_lab e security](docs/img/catalog-explorer-unity-catalog.png)
 
-Print real do Catalog Explorer no Azure Databricks, evidenciando o catálogo `dbw_telcostream_dev` e a organização dos schemas `bronze`, `silver`, `gold`, `ops`, `pipeline_lab` e `security` no Unity Catalog. Esta visão reforça a estrutura Medallion do projeto e a separação entre ingestão, transformação, analytics, governança e artefatos declarativos.
+Print real do Catalog Explorer no Azure Databricks, evidenciando o catálogo `dbw_telcostream_dev` e a organização dos schemas `bronze`, `silver`, `gold`, `ops`, `pipeline_lab` e `security` no Unity Catalog. Esta visão reforça a estrutura Medalhão do projeto e a separação entre ingestão, transformação, analytics, governança e artefatos declarativos.
+
+### 📊 Contagens end-to-end (12 tabelas, todas as fases)
+
+![Cell 10.1 — contagens end-to-end mostrando 12 tabelas com linhas validadas em todas as fases do projeto](docs/img/contagens-end-to-end.png)
+
+Query SQL que consolida contagens de todas as 12 tabelas do projeto em uma única visualização. Manifesto de reconciliação: **1.149 Bronze = 1.020 Silver + 4 Quarentena + 125 Duplicatas**.
+
+### 🔒 Governança ativa — Column Mask + Row Filter
+
+![DESCRIBE EXTENDED em silver.cdr_silver mostrando Row Filter e Column Masks aplicados via Unity Catalog](docs/img/governance-describe-extended.png)
+
+`DESCRIBE EXTENDED` em `silver.cdr_silver` confirmando `row_filter_tenant` e `mask_pii` aplicados diretamente no metastore do Unity Catalog — não apenas em lógica de aplicação.
+
+### ⚙️ Lakeflow Job — 3 tarefas em sequência
+
+![Lakeflow Job telcostream_pipeline_job com 3 tarefas — ingest_bronze, process_silver e build_gold — todas com status SUCCESS](docs/img/lakeflow-job-run.png)
+
+Job `telcostream_pipeline_job` com dependências serializadas: `ingest_bronze` → `process_silver` → `build_gold`. Run com todas as 3 tarefas concluídas com sucesso.
+
+### 🌐 External Locations no Unity Catalog
+
+![SHOW EXTERNAL LOCATIONS mostrando 2 locations registradas no Unity Catalog — storage gerenciado e storage externo real](docs/img/show-external-locations.png)
+
+`SHOW EXTERNAL LOCATIONS` evidenciando as 2 external locations registradas: o storage gerenciado pelo workspace e `telco_external_raw` apontando para o storage externo criado fora do managed resource group.
+
+---
 
 ## Estrutura do Repositório
 
