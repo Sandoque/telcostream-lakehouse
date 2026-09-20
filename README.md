@@ -51,7 +51,6 @@ telcostream-lakehouse/
 | 7 | Git folder + Declarative Automation Bundle | ✅ |
 | 8 | Governança: column mask, row filter, GRANTs | ✅ |
 | 9 | Azure Extensions: external table, secret scope | ✅ (parcial) |
-| 10 | Evidências para entrevista | ✅ |
 
 ## Recursos no Workspace
 
