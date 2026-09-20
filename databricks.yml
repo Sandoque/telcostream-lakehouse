@@ -45,7 +45,7 @@ resources:
     telcostream_sdp:
       name: telcostream_sdp
       catalog: ${var.catalog}
-      target: ${var.pipeline_schema}
+      schema: ${var.pipeline_schema}
       serverless: true
       photon: true
       continuous: false
