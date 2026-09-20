@@ -94,3 +94,35 @@ Finalidade: evidência técnica para Certificação DP-750.
 * **external storage**: controlado pela empresa e governado pelo Unity Catalog
 
 **Implicação prática:** o bundle atual permanece sem recursos de external location até a infraestrutura Azure externa existir e ser validada manualmente.
+
+### Passos do mini lab (executar no checklist notebook após provisionar a infra)
+
+Pré-requisitos no Azure Portal:
+1. Storage Account fora do managed RG (ex: `sttelcoextdev`, container `telcostream-external`)
+2. Access Connector for Azure Databricks no mesmo RG (ex: `ac-telcostream-lab`)
+3. Role `Storage Blob Data Contributor` atribuído ao Access Connector no storage account
+
+Sequência no Databricks (substituir placeholders antes de executar):
+
+```sql
+-- Passo 1: Storage Credential via Managed Identity
+CREATE STORAGE CREDENTIAL IF NOT EXISTS telco_external_cred
+  WITH AZURE_MANAGED_IDENTITY (
+    CREDENTIAL_NAME = '/subscriptions/<SUB_ID>/resourceGroups/rg-telcostream-lab/providers/Microsoft.Databricks/accessConnectors/ac-telcostream-lab'
+  );
+VALIDATE STORAGE CREDENTIAL telco_external_cred
+  ON LOCATION 'abfss://telcostream-external@<STORAGE_ACCOUNT>.dfs.core.windows.net/';
+
+-- Passo 2: External Location
+CREATE EXTERNAL LOCATION IF NOT EXISTS telco_external_raw
+  URL 'abfss://telcostream-external@<STORAGE_ACCOUNT>.dfs.core.windows.net/raw'
+  WITH (STORAGE CREDENTIAL telco_external_cred);
+VALIDATE EXTERNAL LOCATION telco_external_raw;
+
+-- Passo 3: External Table (após exportar Gold para o path externo)
+CREATE TABLE IF NOT EXISTS dbw_telcostream_dev.bronze.kpi_external_real
+  USING DELTA
+  LOCATION 'abfss://telcostream-external@<STORAGE_ACCOUNT>.dfs.core.windows.net/raw/kpi_snapshot';
+SELECT count(*) FROM dbw_telcostream_dev.bronze.kpi_external_real;
+DESCRIBE EXTENDED dbw_telcostream_dev.bronze.kpi_external_real;
+```
