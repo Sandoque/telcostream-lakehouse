@@ -100,3 +100,51 @@
 | Repo | `https://github.com/Sandoque/telcostream-lakehouse` |
 | Branch | `codex/telcostream-lab` |
 | Bundle | `databricks.yml` na raiz |
+
+---
+
+## Evidências verificadas (2026-09-20)
+
+### SHOW EXTERNAL LOCATIONS
+
+| name | url | comment |
+|---|---|---|
+| `dbw_telcostream_dev` | `abfss://unity-catalog-storage@dbstorageendatmjb73tym.dfs.core.windows.net/7405611591723186` | *(managed, sem comentário)* |
+| `telco_external_raw` | `abfss://telcostream-external@sttelcoextdev.dfs.core.windows.net/raw` | Landing zone externa fora do managed RG |
+
+### SHOW STORAGE CREDENTIALS
+
+| name | comment |
+|---|---|
+| `dbw_telcostream_dev` | *(managed, sem comentário)* |
+| `telco_external_cred` | Credential de Managed Identity para o storage externo TelcoStream |
+
+### DESCRIBE EXTENDED silver.cdr_silver — Governance (linhas-chave)
+
+| col_name | valor |
+|---|---|
+| Row Filter | `` `dbw_telcostream_dev`.`security`.`row_filter_tenant` ON (tenant_id) `` |
+| # Column Masks | *(seção)* |
+| `msisdn` | `` `dbw_telcostream_dev`.`security`.`mask_pii` `` |
+| `document_id` | `` `dbw_telcostream_dev`.`security`.`mask_pii` `` |
+| Type | MANAGED |
+| Owner | `acshinobi@outlook.com` |
+| Provider | delta |
+| Comment | Eventos CDR validados, deduplicados e tipados — Silver |
+
+### Contagens end-to-end (cell 10.1)
+
+| fase | tabela | linhas |
+|---|---|---|
+| 0-Bronze | `bronze_cdr` | **1.149** |
+| 0-Bronze | `customer_events` | **110** |
+| 1-Silver | `cdr_quarantine` | **4** |
+| 1-Silver | `cdr_silver` | **1.020** |
+| 3-SCD2 | `dim_customer_scd2` | **110** |
+| 4-Gold | `kpi_tower_hourly` | **72** |
+| 5-SDP | `bronze_cdr_sdp` | **1.149** |
+| 5-SDP | `bronze_customers_sdp` | **110** |
+| 5-SDP | `cdr_silver_sdp` | **1.020** |
+| 5-SDP | `kpi_tower_hourly_sdp` | **72** |
+| 9-Azure | `kpi_external_real` | **72** |
+| 9-Azure | `kpi_external_snapshot` | **72** |

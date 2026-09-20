@@ -162,3 +162,91 @@ DESCRIBE EXTENDED dbw_telcostream_dev.bronze.kpi_external_real;
 | `<STORAGE_ACCOUNT>` | Nome criado no Passo 1 (ex: `sttelcoextdev`) |
 
 **Custo estimado:** Storage LRS < 1 GB ≈ \$0,02/mês. Apagar o storage após a demo.
+
+---
+
+# Roteiro de Demonstração — 8 minutos (Capgemini/Vivo)
+
+## Minuto 0–1 — Arquitetura geral
+
+> "O projeto TelcoStream implementa um Lakehouse Medallião completo no Azure Databricks com Unity Catalog."
+
+Mostre: Catalog Explorer → `dbw_telcostream_dev` → schemas bronze/silver/gold/pipeline_lab/security
+
+## Minuto 1–2 — Ingestão Bronze
+
+* Auto Loader (`cloudFiles`) com `availableNow=True` + checkpoint incremental
+* COPY INTO idempotente para dados de clientes
+* **Números-chave**: 1.149 CDRs, 110 clientes, 2 lotes processados
+
+Mostre: `SHOW TABLES IN bronze` + contagens da cell 10.1
+
+## Minuto 2–3 — Silver e Qualidade
+
+* MERGE com CTE inline (idempotente, `event_version` maior vence)
+* Quarentena: 4 registros inválidos capturados
+* SCD2: dim_customer_scd2 — histórico C000 BASIC → PREMIUM
+* **Números-chave**: 1.020 válidos + 4 quarentena + 125 duplicatas = 1.149 ✓
+
+Mostre: cell 10.1 + histórico SCD2 de C000
+
+## Minuto 3–4 — Gold e KPIs
+
+* INSERT OVERWRITE particionado por `region`
+* 72 grupos hora/antena — métricas de dropped/completed calls, data_mb
+
+Mostre: `SELECT * FROM gold.kpi_tower_hourly LIMIT 5`
+
+## Minuto 4–5 — Pipeline Declarativo (SDP)
+
+* `telcostream_sdp` — Streaming Tables Bronze, Materialized Views Silver/Gold
+* Expectations: `call_id NOT NULL`, `data_mb >= 0`, join customer
+
+Mostre: Pipeline UI → DAG
+
+## Minuto 5–6 — Lakeflow Job + Bundle
+
+* Job `telcostream_pipeline_job` — 3 tarefas em sequência
+* Run 695010521785213: 3 tasks SUCCESS
+* Bundle DAB: `Sandoque/telcostream-lakehouse`, branch `codex/telcostream-lab`
+
+Mostre: Job UI → grafo de dependências + último run
+
+## Minuto 6–7 — Governança Unity Catalog
+
+* Column Mask `security.mask_pii`: msisdn, document_id ocultos para analistas
+* Row Filter `security.row_filter_tenant`: multi-tenant isolation
+* GRANTs: analistas só vêem Gold
+
+Mostre: cell 10.2 (is_member=false → valores reais) + DESCRIBE EXTENDED cdr_silver
+
+## Minuto 7–8 — Azure Extensions
+
+**External storage (managed vs externo):**
+* `dbstorageendatmjb73tym` — storage gerenciado, deny assignment bloqueia acesso no Portal
+* `sttelcoextdev` — storage externo controlado pela empresa, acessível no portal
+
+**Unity Catalog governance sobre storage externo:**
+* `telco_external_cred` — credential via Access Connector `ac-telcostream-lab` (Managed Identity)
+* `telco_external_raw` — external location `abfss://telcostream-external@sttelcoextdev.dfs.core.windows.net/raw`
+* `kpi_external_real` — external table Delta (72 linhas)
+
+**Secret scope:** `telcostream-scope` — 3 chaves; `dbutils.secrets.get` oculta valores em logs
+
+Mostre:
+1. Azure Portal → `sttelcoextdev` → Containers → acessível ✅
+2. Azure Portal → `dbstorageendatmjb73tym` → Containers → erro 403 ✅
+3. cell 10.1 → `kpi_external_real = 72`
+4. cell 9.3b → lista de secrets
+
+## Perguntas esperadas e respostas-chave
+
+| Pergunta | Resposta |
+|---|---|
+| Por que não usar `spark.read` em vez de Auto Loader? | Auto Loader rastreia novos arquivos com checkpoint — idempotente e escalável |
+| Por que CTE inline no MERGE? | TEMP VIEWs não propagam entre statements na mesma cell |
+| Diferença Managed vs External table? | Managed: UC gerencia dados + metadados; External: dados fora do UC, metadados no UC |
+| O que é SCD2? | Snapshot histórico com `valid_from/to` e `is_current`; preserva evolução de atributos |
+| Como funciona o Bundle? | `databricks.yml` descreve Job + Pipeline; `bundle deploy` sincroniza com workspace |
+| Por que não usar o storage do Databricks como external? | Tem deny assignment — gerenciado pelo serviço. External location de produção usa storage da empresa com RBAC explícito |
+| O que é um Access Connector? | Recurso Azure que vincula Managed Identity ao workspace Databricks, eliminando senhas/secrets para acessar ADLS |
