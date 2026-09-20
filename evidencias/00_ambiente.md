@@ -4,9 +4,9 @@
 
 | Campo | Valor |
 |---|---|
-| Workspace ID | `7405611591723186` |
-| Host | `https://adb-7405611591723186.6.azuredatabricks.net` |
-| Usuário | `acshinobi@outlook.com` |
+| Workspace ID | `<WORKSPACE_ID>` |
+| Host | `<WORKSPACE_HOST>` |
+| Usuário | `<USER_EMAIL>` |
 | Compute padrão | Serverless Interactive (CPU) |
 | Região Azure | East US (inferida) |
 | Unity Catalog | Habilitado |
@@ -28,26 +28,26 @@
 
 | Campo | Valor |
 |---|---|
-| Conta ADLS | `dbstorageendatmjb73tym` |
-| Container UC | `unity-catalog-storage` |
-| Path raiz UC | `abfss://unity-catalog-storage@dbstorageendatmjb73tym.dfs.core.windows.net/7405611591723186` |
-| Path managed | `…/__unitystorage/catalogs/788c33de-335c-4f28-a0db-f7e13c12bc36` |
-| Path external lab | `…/7405611591723186/external_lab/kpi_snapshot` |
+| Conta ADLS | `<UC_STORAGE_ACCOUNT>` |
+| Container UC | `<UC_STORAGE_CONTAINER>` |
+| Path raiz UC | `abfss://<UC_STORAGE_CONTAINER>@<UC_STORAGE_ACCOUNT>.dfs.core.windows.net/<WORKSPACE_ID>` |
+| Path managed | `…/__unitystorage/catalogs/<UC_CATALOG_INTERNAL_ID>` |
+| Path external lab | `…/<WORKSPACE_ID>/external_lab/kpi_snapshot` |
 | Storage Credential (managed) | `dbw_telcostream_dev` |
 | Storage Credential (externo) | `telco_external_cred` via Access Connector Managed Identity |
-| External Location (managed) | `dbw_telcostream_dev` → `.../7405611591723186` |
-| External Location (externo) | `telco_external_raw` → `abfss://telcostream-external@sttelcoextdev.dfs.core.windows.net/raw` |
+| External Location (managed) | `dbw_telcostream_dev` → `.../<WORKSPACE_ID>` |
+| External Location (externo) | `telco_external_raw` → `abfss://<EXTERNAL_CONTAINER>@<EXTERNAL_STORAGE_ACCOUNT>.dfs.core.windows.net/raw` |
 
 ## Recursos Azure Externos (mini lab Fase 9.5)
 
 | Recurso Azure | Valor |
 |---|---|
-| Resource Group | `rg-telcostream-lab` |
-| Storage Account | `sttelcoextdev` (LRS, ADLS Gen2, HNS habilitado) |
-| Container | `telcostream-external` |
-| Access Connector | `ac-telcostream-lab` |
-| Access Connector Resource ID | `/subscriptions/f6ca658a-c0a3-43b3-b43c-f8b2c456885b/resourceGroups/rg-telcostream-lab/providers/Microsoft.Databricks/accessConnectors/ac-telcostream-lab` |
-| RBAC | `Storage Blob Data Contributor` atribuído ao `ac-telcostream-lab` em `sttelcoextdev` |
+| Resource Group | `<AZURE_RESOURCE_GROUP>` |
+| Storage Account | `<EXTERNAL_STORAGE_ACCOUNT>` (LRS, ADLS Gen2, HNS habilitado) |
+| Container | `<EXTERNAL_CONTAINER>` |
+| Access Connector | `<ACCESS_CONNECTOR_NAME>` |
+| Access Connector Resource ID | `/subscriptions/<AZURE_SUBSCRIPTION_ID>/resourceGroups/<AZURE_RESOURCE_GROUP>/providers/Microsoft.Databricks/accessConnectors/<ACCESS_CONNECTOR_NAME>` |
+| RBAC | `Storage Blob Data Contributor` atribuído ao `<ACCESS_CONNECTOR_NAME>` em `<EXTERNAL_STORAGE_ACCOUNT>` |
 
 ## Volumes (Bronze)
 
@@ -109,8 +109,8 @@
 
 | name | url | comment |
 |---|---|---|
-| `dbw_telcostream_dev` | `abfss://unity-catalog-storage@dbstorageendatmjb73tym.dfs.core.windows.net/7405611591723186` | *(managed, sem comentário)* |
-| `telco_external_raw` | `abfss://telcostream-external@sttelcoextdev.dfs.core.windows.net/raw` | Landing zone externa fora do managed RG |
+| `dbw_telcostream_dev` | `abfss://<UC_STORAGE_CONTAINER>@<UC_STORAGE_ACCOUNT>.dfs.core.windows.net/<WORKSPACE_ID>` | *(managed, sem comentário)* |
+| `telco_external_raw` | `abfss://<EXTERNAL_CONTAINER>@<EXTERNAL_STORAGE_ACCOUNT>.dfs.core.windows.net/raw` | Landing zone externa fora do managed RG |
 
 ### SHOW STORAGE CREDENTIALS
 
@@ -128,7 +128,7 @@
 | `msisdn` | `` `dbw_telcostream_dev`.`security`.`mask_pii` `` |
 | `document_id` | `` `dbw_telcostream_dev`.`security`.`mask_pii` `` |
 | Type | MANAGED |
-| Owner | `acshinobi@outlook.com` |
+| Owner | `<USER_EMAIL>` |
 | Provider | delta |
 | Comment | Eventos CDR validados, deduplicados e tipados — Silver |
 

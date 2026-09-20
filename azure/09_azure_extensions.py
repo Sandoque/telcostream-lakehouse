@@ -25,10 +25,11 @@
 # ---------------------------------------------------------------
 # 9.2  External Table — snapshot Gold exportado para path externo
 # Usa storage credential 'dbw_telcostream_dev' (cobre todo o storage)
+# Substitua os placeholders abaixo antes de executar fora do ambiente original.
 # ---------------------------------------------------------------
 EXTERNAL_PATH = (
-    "abfss://unity-catalog-storage@dbstorageendatmjb73tym.dfs.core.windows.net"
-    "/7405611591723186/external_lab/kpi_snapshot"
+    "abfss://<UC_STORAGE_CONTAINER>@<UC_STORAGE_ACCOUNT>.dfs.core.windows.net"
+    "/<WORKSPACE_ID>/external_lab/kpi_snapshot"
 )
 
 # Exportar Gold para Delta fora do __unitystorage
