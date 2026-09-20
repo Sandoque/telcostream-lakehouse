@@ -22,6 +22,12 @@ ADLS Gen2 (Volumes UC)
                          ► gold.kpi_tower_hourly      (72 grupos hora/antena)
 ```
 
+### 📸 Evidência no Azure Databricks (Unity Catalog)
+
+![Catalog Explorer do Azure Databricks mostrando o catálogo dbw_telcostream_dev e os schemas bronze, silver, gold, ops, pipeline_lab e security](docs/img/catalog-explorer-unity-catalog.png)
+
+Print real do Catalog Explorer no Azure Databricks, evidenciando o catálogo `dbw_telcostream_dev` e a organização dos schemas `bronze`, `silver`, `gold`, `ops`, `pipeline_lab` e `security` no Unity Catalog. Esta visão reforça a estrutura Medallion do projeto e a separação entre ingestão, transformação, analytics, governança e artefatos declarativos.
+
 ## Estrutura do Repositório
 
 ```
