@@ -33,8 +33,21 @@
 | Path raiz UC | `abfss://unity-catalog-storage@dbstorageendatmjb73tym.dfs.core.windows.net/7405611591723186` |
 | Path managed | `…/__unitystorage/catalogs/788c33de-335c-4f28-a0db-f7e13c12bc36` |
 | Path external lab | `…/7405611591723186/external_lab/kpi_snapshot` |
-| Storage Credential | `dbw_telcostream_dev` |
-| External Location | `dbw_telcostream_dev` (cobre todo `7405611591723186`) |
+| Storage Credential (managed) | `dbw_telcostream_dev` |
+| Storage Credential (externo) | `telco_external_cred` via Access Connector Managed Identity |
+| External Location (managed) | `dbw_telcostream_dev` → `.../7405611591723186` |
+| External Location (externo) | `telco_external_raw` → `abfss://telcostream-external@sttelcoextdev.dfs.core.windows.net/raw` |
+
+## Recursos Azure Externos (mini lab Fase 9.5)
+
+| Recurso Azure | Valor |
+|---|---|
+| Resource Group | `rg-telcostream-lab` |
+| Storage Account | `sttelcoextdev` (LRS, ADLS Gen2, HNS habilitado) |
+| Container | `telcostream-external` |
+| Access Connector | `ac-telcostream-lab` |
+| Access Connector Resource ID | `/subscriptions/f6ca658a-c0a3-43b3-b43c-f8b2c456885b/resourceGroups/rg-telcostream-lab/providers/Microsoft.Databricks/accessConnectors/ac-telcostream-lab` |
+| RBAC | `Storage Blob Data Contributor` atribuído ao `ac-telcostream-lab` em `sttelcoextdev` |
 
 ## Volumes (Bronze)
 
@@ -59,6 +72,7 @@
 | 5 – SDP | `pipeline_lab.cdr_silver_sdp` | **1.020** |
 | 5 – SDP | `pipeline_lab.kpi_tower_hourly_sdp` | **72** |
 | 9 – Azure | `bronze.kpi_external_snapshot` | **72** |
+| 9 – Azure (ext) | `bronze.kpi_external_real` | **72** |
 
 **Manifesto de reconciliação:** 1.149 Bronze = 1.020 Silver + 4 Quarentena + 125 Duplicatas ✅
 

@@ -82,3 +82,83 @@ Finalidade: evidência técnica para Certificação DP-750.
 **Decisão:** criar `bronze.kpi_external_snapshot` em `external_lab/kpi_snapshot` dentro do mesmo storage account UC, usando a storage credential existente.
 
 **Por quê:** O workspace tem apenas uma storage account (`dbstorageendatmjb73tym`). Uma external location apontando para um container separado exigiria um segundo storage account com Service Principal dedicado. Usar um sub-path fora de `__unitystorage/` dentro da mesma conta demonstra o padrão de external table (arquivo Delta gerenciado pelo usuário, não pelo UC) sem precisar de infraestrutura adicional.
+
+---
+
+## 11. External location real deve ficar fora do managed resource group (Fase 9)
+
+**Decisão:** planejar o mini lab de external location usando um storage account criado fora do resource group gerenciado do Azure Databricks.
+
+**Por quê:** O storage account `dbstorageendatmjb73tym` está no managed resource group do workspace e possui um **deny assignment** criado automaticamente pelo Azure Databricks. Isso impede navegação e operações administrativas diretas pelo Azure Portal, mesmo quando a conta possui permissões amplas na subscription. Para demonstrar corretamente external location em entrevista e seguir o padrão de produção, o ideal é usar um storage account controlado pela empresa, com Access Connector / Managed Identity e RBAC explícito (`Storage Blob Data Contributor`). Assim fica clara a separação entre:
+* **managed storage**: controlado pelo Databricks
+* **external storage**: controlado pela empresa e governado pelo Unity Catalog
+
+**Implicação prática:** o bundle atual permanece sem recursos de external location até a infraestrutura Azure externa existir e ser validada manualmente.
+
+### Passos do mini lab (executar no checklist notebook após provisionar a infra)
+
+Pré-requisitos no Azure Portal:
+1. Storage Account fora do managed RG (ex: `sttelcoextdev`, container `telcostream-external`)
+2. Access Connector for Azure Databricks no mesmo RG (ex: `ac-telcostream-lab`)
+3. Role `Storage Blob Data Contributor` atribuído ao Access Connector no storage account
+
+Sequência no Databricks (substituir placeholders antes de executar):
+
+```sql
+-- Passo 1: Storage Credential via Managed Identity
+CREATE STORAGE CREDENTIAL IF NOT EXISTS telco_external_cred
+  WITH AZURE_MANAGED_IDENTITY (
+    CREDENTIAL_NAME = '/subscriptions/<SUB_ID>/resourceGroups/rg-telcostream-lab/providers/Microsoft.Databricks/accessConnectors/ac-telcostream-lab'
+  );
+VALIDATE STORAGE CREDENTIAL telco_external_cred
+  ON LOCATION 'abfss://telcostream-external@<STORAGE_ACCOUNT>.dfs.core.windows.net/';
+
+-- Passo 2: External Location
+CREATE EXTERNAL LOCATION IF NOT EXISTS telco_external_raw
+  URL 'abfss://telcostream-external@<STORAGE_ACCOUNT>.dfs.core.windows.net/raw'
+  WITH (STORAGE CREDENTIAL telco_external_cred);
+VALIDATE EXTERNAL LOCATION telco_external_raw;
+
+-- Passo 3: External Table (após exportar Gold para o path externo)
+CREATE TABLE IF NOT EXISTS dbw_telcostream_dev.bronze.kpi_external_real
+  USING DELTA
+  LOCATION 'abfss://telcostream-external@<STORAGE_ACCOUNT>.dfs.core.windows.net/raw/kpi_snapshot';
+SELECT count(*) FROM dbw_telcostream_dev.bronze.kpi_external_real;
+DESCRIBE EXTENDED dbw_telcostream_dev.bronze.kpi_external_real;
+```
+
+### Passo a passo no Azure Portal (antes de executar o SQL acima)
+
+**Passo 1 — Criar o Storage Account externo**
+1. Azure Portal → Create a resource → Storage account
+2. Resource group: `rg-telcostream-lab` (NÃO o managed RG `rg-telcostream-databricks-managed`)
+3. Storage account name: `sttelcoextdev` (único globalmente, letras+números, máx 24 chars)
+4. Region: mesma do workspace | Performance: Standard | Redundancy: LRS
+5. Networking → Public endpoint (all networks)
+6. Review + create
+
+**Passo 2 — Criar container `telcostream-external`**
+1. Dentro do storage account → Data storage → Containers → + Container
+2. Name: `telcostream-external` | Public access level: Private
+
+**Passo 3 — Criar Access Connector for Azure Databricks**
+1. Create a resource → Access Connector for Azure Databricks
+2. Resource group: `rg-telcostream-lab` | Name: `ac-telcostream-lab` | mesma região
+3. Após criar: Settings → Properties → copiar o **Resource ID** completo
+   Formato: `/subscriptions/<SUB_ID>/resourceGroups/rg-telcostream-lab/providers/Microsoft.Databricks/accessConnectors/ac-telcostream-lab`
+
+**Passo 4 — Atribuir role ao Access Connector**
+1. No storage account `sttelcoextdev` → Access control (IAM) → + Add → Add role assignment
+2. Role: `Storage Blob Data Contributor` → Next
+3. Members → Assign access to: Managed identity → + Select members
+4. Filtrar por Access Connector for Azure Databricks → selecionar `ac-telcostream-lab`
+5. Review + assign (confirmar duas vezes)
+
+**Placeholders para substituir no SQL:**
+
+| Placeholder | Onde obter |
+|---|---|
+| `<SUB_ID>` | Azure Portal → Subscriptions → Subscription ID |
+| `<STORAGE_ACCOUNT>` | Nome criado no Passo 1 (ex: `sttelcoextdev`) |
+
+**Custo estimado:** Storage LRS < 1 GB ≈ \$0,02/mês. Apagar o storage após a demo.
