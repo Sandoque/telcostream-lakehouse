@@ -165,7 +165,7 @@ DESCRIBE EXTENDED dbw_telcostream_dev.bronze.kpi_external_real;
 
 ---
 
-# Roteiro de Demonstração — 8 minutos (Capgemini/Vivo)
+# Roteiro de Demonstração — 8 minutos
 
 ## Minuto 0–1 — Arquitetura geral
 
