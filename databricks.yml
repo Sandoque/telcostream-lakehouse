@@ -58,4 +58,4 @@ resources:
       channel: CURRENT
       libraries:
         - glob:
-            include: /Users/${var.workspace_user_email}/<PIPELINE_PROJECT_PATH>/transformations/**
+            include: ./sdp/transformations/**
