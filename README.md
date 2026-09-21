@@ -64,15 +64,24 @@ Job `telcostream_pipeline_job` com dependências serializadas: `ingest_bronze` �
 
 ```
 telcostream-lakehouse/
-├── databricks.yml                  # Declarative Automation Bundle (DAB)
+├── databricks.yml                       # Declarative Automation Bundle (DAB)
 ├── governance/
-│   └── 08_governance.sql            # Column masks, row filter, GRANTs
+│   └── 08_governance.sql                # Column masks, row filter, GRANTs
 ├── azure/
-│   └── 09_azure_extensions.py       # External table + secret scope
+│   └── 09_azure_extensions.py           # External table + secret scope
+├── sdp/
+│   └── transformations/
+│       ├── bronze/
+│       │   ├── bronze_cdr_sdp.py        # Auto Loader JSON → Streaming Table
+│       │   └── bronze_customers_sdp.py  # Auto Loader CSV  → Streaming Table
+│       ├── silver/
+│       │   └── cdr_silver_sdp.py        # Materialized View: deduplicação + tipagem + Expectations
+│       └── gold/
+│           └── kpi_tower_hourly_sdp.py  # Materialized View: KPIs por torre/hora
 ├── evidencias/
-│   └── 00_ambiente.md               # Workspace, contagens, infra
+│   └── 00_ambiente.md                   # Workspace, contagens, infra
 └── docs/
-    └── decisoes.md                  # Decisões técnicas documentadas
+    └── decisoes.md                      # Decisões técnicas documentadas
 ```
 
 ## Fases Implementadas
